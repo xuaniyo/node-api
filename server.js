@@ -13,8 +13,8 @@ app.use(bodyParser.json());
 var port     = process.env.PORT || 8080; // set our port
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://node:node@novus.modulusmongo.net:27017/Iganiq8o'); // connect to our database
-var Bear     = require('./app/models/bear');
+mongoose.connect('mongodb://user:Temporal1@ds051720.mongolab.com:51720/restaurantsdb'); // connect to our database
+var Restaurant     = require('./app/models/restaurant');
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -34,72 +34,72 @@ router.get('/', function(req, res) {
 	res.json({ message: 'hooray! welcome to our api!' });	
 });
 
-// on routes that end in /bears
+// on routes that end in /restaurants
 // ----------------------------------------------------
-router.route('/bears')
+router.route('/restaurants')
 
-	// create a bear (accessed at POST http://localhost:8080/bears)
+	// create a restaurant (accessed at POST http://localhost:8080/api/restaurants)
 	.post(function(req, res) {
 		
-		var bear = new Bear();		// create a new instance of the Bear model
-		bear.name = req.body.name;  // set the bears name (comes from the request)
+		var restaurant = new Restaurant();		// create a new instance of the Restaurant model
+		restaurant.name = req.body.name;  // set the Restaurant name (comes from the request)
 
-		bear.save(function(err) {
+		restaurant.save(function(err) {
 			if (err)
 				res.send(err);
 
-			res.json({ message: 'Bear created!' });
+			res.json({ message: 'Restaurant created!' });
 		});
 
 		
 	})
 
-	// get all the bears (accessed at GET http://localhost:8080/api/bears)
+	// get all the restaurants (accessed at GET http://localhost:8080/api/restaurants)
 	.get(function(req, res) {
-		Bear.find(function(err, bears) {
+		Restaurant.find(function(err, restaurants) {
 			if (err)
 				res.send(err);
 
-			res.json(bears);
+			res.json(restaurants);
 		});
 	});
 
-// on routes that end in /bears/:bear_id
+// on routes that end in /restaurants/:restaurant_id
 // ----------------------------------------------------
-router.route('/bears/:bear_id')
+router.route('/restaurants/:restaurant_id')
 
-	// get the bear with that id
+	// get the restaurant with that id
 	.get(function(req, res) {
-		Bear.findById(req.params.bear_id, function(err, bear) {
+		Restaurant.findById(req.params.restaurant_id, function(err, restaurant) {
 			if (err)
 				res.send(err);
-			res.json(bear);
+			res.json(restaurant);
 		});
 	})
 
-	// update the bear with this id
+	// update the restaurant with this id
 	.put(function(req, res) {
-		Bear.findById(req.params.bear_id, function(err, bear) {
+		Restaurant.findById(req.params.restaurant_id, function(err, restaurant) {
 
 			if (err)
 				res.send(err);
 
-			bear.name = req.body.name;
-			bear.save(function(err) {
+			restaurant.name = req.body.name;
+			restaurant.save(function(err) {
 				if (err)
 					res.send(err);
 
-				res.json({ message: 'Bear updated!' });
+				res.json({ message: 'Restaurant updated!' });
 			});
 
 		});
 	})
 
-	// delete the bear with this id
+	// delete the restaurant with this id
 	.delete(function(req, res) {
-		Bear.remove({
-			_id: req.params.bear_id
-		}, function(err, bear) {
+		Restaurant.remove({
+			_id: req.params.restaurant_id
+		}, function(err, restaurant) {
 			if (err)
 				res.send(err);
 
@@ -107,6 +107,36 @@ router.route('/bears/:bear_id')
 		});
 	});
 
+
+router.route('/restaurants/title/:title')
+
+	// get the restaurant with that id
+	.get(function(req, res) {
+		Restaurant.find({title:req.params.title}, function(err, restaurant) {
+			if (err)
+				res.send(err);
+			res.json(restaurant);
+		});
+	});
+	
+	
+//  near restaurant near?lat=45.5&lon=-82	
+router.route('/restaurants/near/')
+
+	// get the restaurant with that id
+	.get(function(req, res) {
+		
+		//in production you would do some sanity checks on these values before parsing and handle the error if they don't parse
+		var lat = parseFloat(req.query.lat);
+    var lon = parseFloat(req.query.lon);
+		
+		Restaurant.find({"pos" : {$near: [lon,lat]}}, function(err, restaurant) {
+			if (err)
+				res.send(err);
+			res.header("Content-Type:","application/json");
+      res.end(JSON.stringify(names));
+		});
+	});	
 
 // REGISTER OUR ROUTES -------------------------------
 app.use('/api', router);
